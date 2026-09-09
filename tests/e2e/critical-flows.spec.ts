@@ -13,6 +13,35 @@ test("calculator counts code and updates real input cost", async ({ page }) => {
   await expect(page.getByLabel("Language")).toHaveValue("cpp");
 });
 
+test("animated cost never clips standard or long values", async ({ page }) => {
+  await page.goto("/");
+  const cost = page.locator(".cost-value:visible");
+  await expect(cost).toHaveAttribute("data-length", "standard");
+  expect(await cost.evaluate((node) => getComputedStyle(node).overflow)).toBe(
+    "visible",
+  );
+
+  await page
+    .locator("label.model-select:visible select")
+    .selectOption("gpt-5.6-luna");
+  await page.getByRole("textbox").first().fill("x");
+  await expect(cost).toHaveAttribute("data-length", "long");
+
+  const container = page
+    .locator(".cost-panel:visible, .mobile-summary:visible")
+    .first();
+  const [costBox, containerBox] = await Promise.all([
+    cost.boundingBox(),
+    container.boundingBox(),
+  ]);
+  expect(costBox).not.toBeNull();
+  expect(containerBox).not.toBeNull();
+  expect(costBox!.x).toBeGreaterThanOrEqual(containerBox!.x);
+  expect(costBox!.x + costBox!.width).toBeLessThanOrEqual(
+    containerBox!.x + containerBox!.width,
+  );
+});
+
 test("share link opens a private read-only calculation", async ({
   page,
   context,
