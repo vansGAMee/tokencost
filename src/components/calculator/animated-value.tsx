@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const TRANSITION_MS = 420;
+const TRANSITION_MS = 460;
 
 type AnimatedValueProps = {
   value: string;
@@ -53,6 +53,7 @@ export function AnimatedValue({
     >
       {display.previous !== null && (
         <span
+          key={`previous-${display.previous}`}
           className="animated-value__face animated-value__face--leaving"
           aria-hidden="true"
         >
@@ -60,6 +61,7 @@ export function AnimatedValue({
         </span>
       )}
       <span
+        key={`current-${display.current}`}
         className={`animated-value__face ${
           display.previous === null
             ? "animated-value__face--settled"

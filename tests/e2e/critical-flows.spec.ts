@@ -17,15 +17,41 @@ test("animated cost never clips standard or long values", async ({ page }) => {
   await page.goto("/");
   const cost = page.locator(".cost-value:visible");
   await expect(cost).toHaveAttribute("data-length", "standard");
-  expect(await cost.evaluate((node) => getComputedStyle(node).overflow)).toBe(
-    "visible",
-  );
+  const referenceGeometry = await cost.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return {
+      fontSize: Number.parseFloat(style.fontSize),
+      fontWeight: Number.parseInt(style.fontWeight, 10),
+      lineHeight: Number.parseFloat(style.lineHeight),
+      marginTop: style.marginTop,
+      overflow: style.overflow,
+    };
+  });
+  expect(referenceGeometry.overflow).toBe("visible");
+  expect(referenceGeometry.fontWeight).toBeGreaterThanOrEqual(600);
+  if ((page.viewportSize()?.width ?? 0) >= 900) {
+    expect(referenceGeometry.marginTop).toBe("23px");
+    expect(referenceGeometry.lineHeight / referenceGeometry.fontSize).toBeCloseTo(
+      0.95,
+      2,
+    );
+  } else {
+    expect(referenceGeometry.marginTop).toBe("5px");
+    expect(referenceGeometry.lineHeight / referenceGeometry.fontSize).toBeCloseTo(
+      1,
+      2,
+    );
+  }
 
   await page
     .locator("label.model-select:visible select")
     .selectOption("gpt-5.6-luna");
   await page.getByRole("textbox").first().fill("x");
   await expect(cost).toHaveAttribute("data-length", "long");
+  await expect(cost.locator(".animated-value__face--entering")).toHaveCSS(
+    "animation-name",
+    /value-enter.*premium-metal-drift/,
+  );
 
   const container = page
     .locator(".cost-panel:visible, .mobile-summary:visible")
