@@ -73,6 +73,7 @@ a { color: inherit; text-decoration: none; }
 .animated-value__face--leaving { will-change: transform, opacity; animation: value-leave 410ms cubic-bezier(.4,0,.2,1) both; }
 .cost-value { margin-top: 23px; font-size: clamp(54px, 5vw, 82px); font-weight: 620; line-height: .95; letter-spacing: -.065em; font-variant-numeric: tabular-nums slashed-zero; white-space: nowrap; }
 .cost-value[data-length="long"] { font-size: clamp(38px, 3.45vw, 54px); letter-spacing: -.06em; }
+.cost-value .animated-value__face { padding-inline-end: .12em; }
 .cost-value .animated-value__face, .share-preview__value > strong, .shared-cost strong {
   color: transparent;
   background: linear-gradient(106deg, #08090a 0%, #1b1d20 23%, #55585d 43%, #85888d 52%, #3b3e42 64%, #16181a 82%, #090a0b 100%);

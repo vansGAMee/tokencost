@@ -19,15 +19,23 @@ test("animated cost never clips standard or long values", async ({ page }) => {
   await expect(cost).toHaveAttribute("data-length", "standard");
   const referenceGeometry = await cost.evaluate((node) => {
     const style = getComputedStyle(node);
+    const faceStyle = getComputedStyle(
+      node.querySelector<HTMLElement>(".animated-value__face")!,
+    );
     return {
       fontSize: Number.parseFloat(style.fontSize),
       fontWeight: Number.parseInt(style.fontWeight, 10),
+      glyphEndPadding: Number.parseFloat(faceStyle.paddingInlineEnd),
+      letterSpacing: Number.parseFloat(faceStyle.letterSpacing),
       lineHeight: Number.parseFloat(style.lineHeight),
       marginTop: style.marginTop,
       overflow: style.overflow,
     };
   });
   expect(referenceGeometry.overflow).toBe("visible");
+  expect(referenceGeometry.glyphEndPadding).toBeGreaterThan(
+    Math.abs(referenceGeometry.letterSpacing),
+  );
   expect(referenceGeometry.fontWeight).toBeGreaterThanOrEqual(600);
   if ((page.viewportSize()?.width ?? 0) >= 900) {
     expect(referenceGeometry.marginTop).toBe("23px");
