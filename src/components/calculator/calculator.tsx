@@ -18,6 +18,7 @@ import {
 } from "@/lib/money";
 import { detectModelFromCode } from "@/lib/models";
 import { countTokensForModel, type TokenCountResult } from "@/lib/token-count";
+import { AnimatedValue } from "./animated-value";
 import { ModelSelect } from "./model-select";
 import { ShareDialog } from "./share-dialog";
 
@@ -155,7 +156,11 @@ export function Calculator() {
           </Link>
         </div>
         <span>Estimated input cost</span>
-        <strong>{formatMoney(costUsd)}</strong>
+        <AnimatedValue
+          className="cost-value cost-value--mobile"
+          value={formatMoney(costUsd)}
+          ariaLabel={`Estimated input cost ${formatMoney(costUsd)}`}
+        />
         <small>
           {formatNumber(count.tokens)} tokens · {count.accuracy}
         </small>
@@ -228,10 +233,20 @@ export function Calculator() {
             <span>Cost analysis</span>
             <span>{model.displayName}</span>
           </div>
-          <div className="cost-value">{formatMoney(costUsd)}</div>
+          <AnimatedValue
+            className="cost-value"
+            value={formatMoney(costUsd)}
+            ariaLabel={`Calculated input cost ${formatMoney(costUsd)}`}
+          />
           <p>Calculated input cost</p>
           <div className="token-reading">
-            <strong>{formatNumber(count.tokens)}</strong>
+            <strong>
+              <AnimatedValue
+                className="token-value"
+                value={formatNumber(count.tokens)}
+                ariaLabel={`${formatNumber(count.tokens)} tokens`}
+              />
+            </strong>
             <span>tokens · {count.accuracy}</span>
           </div>
           <div className="metric-grid">

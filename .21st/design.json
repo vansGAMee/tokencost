@@ -81,7 +81,8 @@
     "Premium feel comes from typography, spacing, thin rules, responsive hierarchy, and short motion—not decorative effects.",
     "Desktop uses editor and analysis side by side; mobile promotes cost first and keeps the editor below.",
     "New sharing uses eight-character private Blob slugs with 30-day expiry; the URL-fragment reader remains for legacy links.",
-    "Cost numerals alone receive a slow graphite-to-champagne animated sheen inspired by the supplied reference.",
+    "Cost numerals use a broad pearl-graphite satin gradient, heavier tabular typography, a seamless 24-second drift, length-aware fitting, and a 420ms staged compositor transition between values.",
+    "The calculator canvas includes two restrained ambient light planes behind the workspace, moving only a few pixels over 26-32 seconds.",
     "PNG receipts render locally at 1200×800 with syntax-colored code and no image API request."
   ],
   "evidence": [
