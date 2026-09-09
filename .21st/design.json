@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "project": {
+    "name": "app",
+    "productType": "developer tool / token pricing calculator",
+    "stack": ["nextjs", "react", "tailwind-v4"]
+  },
+  "sources": {
+    "tokens": ["src/app/globals.css"],
+    "components": [],
+    "assets": [],
+    "instructions": ["AGENTS.md", "CLAUDE.md"]
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": {
+      "--background": {
+        "value": "#0a0a0a",
+        "source": "src/app/globals.css"
+      },
+      "--foreground": {
+        "value": "#ededed",
+        "source": "src/app/globals.css"
+      },
+      "--color-background": {
+        "value": "var(--background)",
+        "source": "src/app/globals.css"
+      },
+      "--color-foreground": {
+        "value": "var(--foreground)",
+        "source": "src/app/globals.css"
+      }
+    },
+    "typography": {
+      "--font-sans": {
+        "value": "var(--font-geist-sans)",
+        "source": "src/app/globals.css"
+      },
+      "--font-mono": {
+        "value": "var(--font-geist-mono)",
+        "source": "src/app/globals.css"
+      }
+    },
+    "spacing": {},
+    "radius": {},
+    "shadows": {},
+    "motion": {},
+    "density": "compact"
+  },
+  "components": {
+    "installed": [],
+    "preferredPrimitives": [],
+    "patterns": [
+      "split calculator workspace",
+      "local-first code editor",
+      "dense pricing table",
+      "mobile bottom dock",
+      "private URL-fragment sharing",
+      "private short-link sharing",
+      "retina PNG cost receipts",
+      "language-aware code highlighting"
+    ]
+  },
+  "constraints": {
+    "must": [
+      "preserve supplied desktop and mobile calculator compositions",
+      "remain usable from 320px phones through wide desktops",
+      "show source provenance and token-count accuracy",
+      "keep calculation and sharing local-first"
+    ],
+    "avoid": [
+      "decorative green status dots",
+      "glassmorphism",
+      "gradient-heavy surfaces outside the intentionally premium cost numerals",
+      "generic AI dashboard decoration",
+      "fabricated pricing history"
+    ]
+  },
+  "decisions": [
+    "Warm near-white editorial canvas with black ink and restrained blue only for code syntax/focus.",
+    "Premium feel comes from typography, spacing, thin rules, responsive hierarchy, and short motion—not decorative effects.",
+    "Desktop uses editor and analysis side by side; mobile promotes cost first and keeps the editor below.",
+    "New sharing uses eight-character private Blob slugs with 30-day expiry; the URL-fragment reader remains for legacy links.",
+    "Cost numerals alone receive a slow graphite-to-champagne animated sheen inspired by the supplied reference.",
+    "PNG receipts render locally at 1200×800 with syntax-colored code and no image API request."
+  ],
+  "evidence": [
+    {
+      "fact": "design.colorMode:light-and-dark",
+      "source": "src/app/globals.css"
+    },
+    {
+      "fact": "design.tokens",
+      "source": "src/app/globals.css"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "AGENTS.md"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "CLAUDE.md"
+    },
+    {
+      "fact": "project.stack:nextjs",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-09-08T19:33:20.169Z"
+}
