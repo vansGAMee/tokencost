@@ -13,6 +13,48 @@ test("calculator counts code and updates real input cost", async ({ page }) => {
   await expect(page.getByLabel("Language")).toHaveValue("cpp");
 });
 
+test("project import and support use the existing calculator controls", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const support = page.getByRole("link", { name: "Support project" }).first();
+  await expect(support).toHaveAttribute(
+    "href",
+    "https://pay.cloudtips.ru/p/61579e8c",
+  );
+  await expect(support).toHaveAttribute("target", "_blank");
+
+  const folderInput = page.locator('input[aria-label="Upload project folder"]');
+  await expect(folderInput).toHaveAttribute("webkitdirectory", "");
+  await expect(
+    page.getByRole("button", { name: "Upload project folder" }).first(),
+  ).toBeVisible();
+
+  await folderInput.evaluate((node) => {
+    const input = node as HTMLInputElement;
+    const transfer = new DataTransfer();
+    const source = new File(["export const uploaded = 42;"], "index.ts", {
+      type: "text/plain",
+    });
+    Object.defineProperty(source, "webkitRelativePath", {
+      value: "project-upload/index.ts",
+    });
+    transfer.items.add(source);
+    Object.defineProperty(input, "files", {
+      value: transfer.files,
+      configurable: true,
+    });
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await expect(page.getByRole("textbox").first()).toContainText("uploaded");
+  if ((page.viewportSize()?.width ?? 0) >= 900) {
+    await expect(page.getByText("Project analysis")).toBeVisible();
+  } else {
+    await expect(page.getByText("Estimated project cost")).toBeVisible();
+  }
+});
+
 test("animated cost never clips standard or long values", async ({ page }) => {
   await page.goto("/");
   const cost = page.locator(".cost-value:visible");

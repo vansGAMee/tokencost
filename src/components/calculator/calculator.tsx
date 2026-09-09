@@ -2,8 +2,14 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { Clipboard, Share2, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Clipboard, FolderUp, Heart, Share2, Trash2 } from "lucide-react";
+import {
+  type ChangeEvent,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   DEFAULT_MODEL_ID,
   getModelRate,
@@ -17,6 +23,7 @@ import {
   formatNumber,
 } from "@/lib/money";
 import { detectModelFromCode } from "@/lib/models";
+import { prepareProjectFiles, type ProjectBundle } from "@/lib/project-files";
 import { countTokensForModel, type TokenCountResult } from "@/lib/token-count";
 import { AnimatedValue } from "./animated-value";
 import { ModelSelect } from "./model-select";
@@ -57,8 +64,12 @@ export function Calculator() {
     method: "o200k_base",
   });
   const [sharing, setSharing] = useState(false);
+  const [project, setProject] = useState<ProjectBundle | null>(null);
+  const [projectNotice, setProjectNotice] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
   const requestId = useRef(0);
   const worker = useRef<Worker | null>(null);
+  const folderInput = useRef<HTMLInputElement | null>(null);
   const model = getModelRate(modelId);
   const costUsd = calculateInputCost(count.tokens, model.inputUsdPer1M);
   const lines = code ? code.split("\n").length : 0;
@@ -98,6 +109,8 @@ export function Calculator() {
     setIsAuto(automatic);
   }
   function changeCode(nextCode: string) {
+    setProject(null);
+    setProjectNotice("");
     setCode(nextCode);
     if (isAuto) {
       const detected = detectModelFromCode(nextCode);
@@ -107,11 +120,50 @@ export function Calculator() {
 
   async function paste() {
     try {
-      setCode(await navigator.clipboard.readText());
+      changeCode(await navigator.clipboard.readText());
     } catch {
       /* Clipboard permission remains user-controlled. */
     }
   }
+
+  async function importProject(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.currentTarget.files ?? []);
+    event.currentTarget.value = "";
+    if (!files.length) return;
+    setIsImporting(true);
+    setProjectNotice("");
+    try {
+      const bundle = await prepareProjectFiles(files);
+      if (!bundle.includedFiles) {
+        setProject(null);
+        setProjectNotice(
+          bundle.limited
+            ? "Project exceeds the 4 MB source limit"
+            : "No source files found",
+        );
+        return;
+      }
+      setCode(bundle.code);
+      setProject(bundle);
+      setLanguage(bundle.language);
+      if (isAuto) {
+        const detected = detectModelFromCode(bundle.code);
+        if (detected && detected !== modelId) setModelId(detected);
+      }
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  const projectFileLabel = project
+    ? `${project.includedFiles} file${project.includedFiles === 1 ? "" : "s"}`
+    : "";
+  const projectMeta = project
+    ? `${projectFileLabel} · ${project.ignoredFiles} ignored`
+    : `${formatNumber(code.length)} chars · ${lines} lines`;
+  const costLabel = project
+    ? "Calculated project input cost"
+    : "Calculated input cost";
 
   return (
     <main className="calculator-shell">
@@ -130,6 +182,7 @@ export function Calculator() {
             isAuto={isAuto}
             onChange={chooseModel}
           />
+          <SupportLink />
           <button
             className="button button--dark"
             onClick={() => setSharing(true)}
@@ -139,6 +192,16 @@ export function Calculator() {
           </button>
         </div>
       </header>
+
+      <input
+        ref={folderInput}
+        className="sr-only"
+        type="file"
+        multiple
+        aria-label="Upload project folder"
+        onChange={importProject}
+        {...({ webkitdirectory: "" } as Record<string, string>)}
+      />
 
       <section className="mobile-summary" aria-live="polite">
         <div className="mobile-model-row">
@@ -155,11 +218,11 @@ export function Calculator() {
             ⌁
           </Link>
         </div>
-        <span>Estimated input cost</span>
+        <span>{project ? "Estimated project cost" : "Estimated input cost"}</span>
         <AnimatedValue
           className="cost-value cost-value--mobile"
           value={formatMoney(costUsd)}
-          ariaLabel={`Estimated input cost ${formatMoney(costUsd)}`}
+          ariaLabel={`Estimated ${project ? "project " : ""}input cost ${formatMoney(costUsd)}`}
         />
         <small>
           {formatNumber(count.tokens)} tokens · {count.accuracy}
@@ -171,8 +234,8 @@ export function Calculator() {
           </button>
           <button
             className="round-button"
-            onClick={() => setCode("")}
-            aria-label="Clear code"
+            onClick={() => folderInput.current?.click()}
+            aria-label="Upload project folder"
           >
             +
           </button>
@@ -199,15 +262,25 @@ export function Calculator() {
                 <option value="rust">Rust</option>
                 <option value="go">Go</option>
               </select>
-              <span>utf-8</span>
+              <span>{project ? projectFileLabel : "utf-8"}</span>
             </div>
-            <div>
+            <div data-meta={projectMeta}>
+              <button
+                className="project-import-button"
+                data-active={project ? "true" : "false"}
+                onClick={() => folderInput.current?.click()}
+                aria-label="Upload project folder"
+                disabled={isImporting}
+              >
+                <FolderUp size={13} />
+                {isImporting ? "Reading…" : "Project"}
+              </button>
               <button onClick={paste}>
                 <Clipboard size={13} />
                 Paste
               </button>
               <i />
-              <button onClick={() => setCode("")}>
+              <button onClick={() => changeCode("")}>
                 <Trash2 size={13} />
                 Clear
               </button>
@@ -221,7 +294,12 @@ export function Calculator() {
             />
           </div>
           <div className="editor-status">
-            <span>Ln {lines}, Col 1</span>
+            <span>
+              {projectNotice ||
+                (project
+                  ? `${project.rootName} · ${projectFileLabel}${project.limited ? " · size limit reached" : ""}`
+                  : `Ln ${lines}, Col 1`)}
+            </span>
             <span>
               {formatNumber(code.length)} chars · {lines} lines
             </span>
@@ -230,15 +308,15 @@ export function Calculator() {
 
         <aside className="cost-panel" aria-live="polite">
           <div className="cost-heading">
-            <span>Cost analysis</span>
+            <span>{project ? "Project analysis" : "Cost analysis"}</span>
             <span>{model.displayName}</span>
           </div>
           <AnimatedValue
             className="cost-value"
             value={formatMoney(costUsd)}
-            ariaLabel={`Calculated input cost ${formatMoney(costUsd)}`}
+            ariaLabel={`${costLabel} ${formatMoney(costUsd)}`}
           />
-          <p>Calculated input cost</p>
+          <p>{costLabel}</p>
           <div className="token-reading">
             <strong>
               <AnimatedValue
@@ -305,6 +383,7 @@ export function Calculator() {
         <Link href="/rates" aria-label="Rates">
           ↗
         </Link>
+        <SupportLink compact />
         <button onClick={() => setSharing(true)} aria-label="Share calculation">
           <Share2 size={17} />
         </button>
@@ -319,6 +398,34 @@ export function Calculator() {
         language={language}
       />
     </main>
+  );
+}
+
+function SupportLink({ compact = false }: { compact?: boolean }) {
+  function trackLight(event: ReactPointerEvent<HTMLAnchorElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty(
+      "--support-x",
+      `${((event.clientX - bounds.left) / bounds.width) * 100}%`,
+    );
+    event.currentTarget.style.setProperty(
+      "--support-y",
+      `${((event.clientY - bounds.top) / bounds.height) * 100}%`,
+    );
+  }
+
+  return (
+    <a
+      className={compact ? "support-dock-link" : "support-button"}
+      href="https://pay.cloudtips.ru/p/61579e8c"
+      target="_blank"
+      rel="noreferrer noopener"
+      aria-label="Support project"
+      onPointerMove={compact ? undefined : trackLight}
+    >
+      <Heart size={compact ? 16 : 14} strokeWidth={1.8} />
+      {!compact && <span>Support</span>}
+    </a>
   );
 }
 
